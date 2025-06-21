@@ -24,3 +24,15 @@ This service fetches credit card product details from Australian bank Consumer D
    During development you can use `npm run dev` to restart automatically.
 
 The service connects to MongoDB, then periodically fetches credit card products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `CRED_AND_CHRG_CARDS` are processed. Each card is stored or updated in the `CreditCard` collection based on `bankName` and `productId`.
+
+## Python Example
+
+An example Python script is available in the `examples` directory. It demonstrates how to call the Consumer Data Standards APIs using the `requests` library.
+
+Run the script with Python 3:
+
+```bash
+python examples/get_products.py
+```
+
+The script fetches the product list from ANZ and then retrieves details for the first product returned.
