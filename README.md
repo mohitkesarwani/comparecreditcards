@@ -21,4 +21,4 @@ This service fetches credit card product details from Australian bank Consumer D
    ```
    During development you can use `npm run dev` to restart automatically.
 
-The service connects to MongoDB, then periodically fetches products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `TRANS_AND_SAVINGS_ACCOUNTS` or `CREDIT_CARDS` are processed. Each product is stored or updated in the `CreditCard` collection based on `bankName` and `productId`.
+The service connects to MongoDB, then periodically fetches credit card products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `CRED_AND_CHRG_CARDS` are processed. Each card is stored or updated in the `CreditCard` collection based on `bankName` and `productId`.
