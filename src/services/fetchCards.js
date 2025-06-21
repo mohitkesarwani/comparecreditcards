@@ -20,6 +20,25 @@ const DETAIL_HEADERS = process.env.GET_PRODUCT_DETAIL_HEADERS
   ? JSON.parse(process.env.GET_PRODUCT_DETAIL_HEADERS)
   : DEFAULT_DETAIL_HEADERS;
 
+const logApiError = (prefix, err) => {
+  const status = err.response?.status;
+  const url = err.config?.url;
+  let message = `${prefix}: ${err.message}`;
+  if (status) {
+    message += ` (status ${status})`;
+  }
+  if (url) {
+    message += ` [${url}]`;
+  }
+  console.error(message);
+  if (err.response?.data) {
+    console.error('Response data:', JSON.stringify(err.response.data));
+  }
+  if (err.stack) {
+    console.error(err.stack);
+  }
+};
+
 export const fetchCards = async () => {
   for (const bank of banks) {
     console.log(`Fetching cards for ${bank.name}`);
@@ -58,11 +77,11 @@ export const fetchCards = async () => {
           );
           console.log(`Saved ${detail.productId} from ${bank.name}`);
         } catch (err) {
-          console.error(`Failed to fetch product ${product.productId} from ${bank.name}:`, err.message);
+          logApiError(`Failed to fetch product ${product.productId} from ${bank.name}`, err);
         }
       }
     } catch (err) {
-      console.error(`Failed to fetch product list from ${bank.name}:`, err.message);
+      logApiError(`Failed to fetch product list from ${bank.name}`, err);
     }
   }
 };
