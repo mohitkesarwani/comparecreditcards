@@ -14,6 +14,8 @@ This service fetches credit card product details from Australian bank Consumer D
    ```
    - `MONGO_URI` – MongoDB connection string
    - `CRON_SCHEDULE` – cron expression used to run the fetch job
+   - `GET_PRODUCTS_HEADERS` – JSON object of headers for the product list request
+   - `GET_PRODUCT_DETAIL_HEADERS` – JSON object of headers for the product detail request
 
 3. Start the service
    ```bash
