@@ -1,0 +1,16 @@
+services:
+  - type: worker
+    name: credit-card-worker
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: CRON_SCHEDULE
+        sync: false
+      - key: GET_PRODUCTS_HEADERS
+        sync: false
+      - key: GET_PRODUCT_DETAIL_HEADERS
+        sync: false
