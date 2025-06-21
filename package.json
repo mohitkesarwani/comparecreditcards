@@ -1,7 +1,7 @@
 {
   "name": "comparecreditcards",
   "version": "1.0.0",
-  "description": "Backend for a credit card comparison website in Australia",
+  "description": "Service to fetch and store Australian bank credit card data",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -14,7 +14,6 @@
   "dependencies": {
     "axios": "^1.6.7",
     "dotenv": "^16.3.1",
-    "express": "^4.19.2",
     "mongoose": "^8.3.5",
     "node-cron": "^3.0.3"
   },
