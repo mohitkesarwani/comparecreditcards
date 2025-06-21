@@ -1,35 +1,24 @@
-# Compare Credit Cards Backend
+# Credit Card Data Service
 
-This project is an Express/MongoDB backend for a React-based credit card comparison website in Australia. It fetches credit card data from Australian Open Banking APIs and exposes it via REST.
+This service fetches credit card product details from Australian bank Consumer Data Standards APIs and stores them in MongoDB. Data is refreshed on a schedule using `node-cron`.
 
 ## Setup
 
-1. Install dependencies (requires Node.js 18+)
+1. Install dependencies (Node.js 18+ recommended):
+   ```bash
+   npm install
+   ```
+2. Copy `.env.example` to `.env` and update the values if necessary:
+   ```bash
+   cp .env.example .env
+   ```
+   - `MONGO_URI` – MongoDB connection string
+   - `CRON_SCHEDULE` – cron expression used to run the fetch job
 
-```bash
-npm install
-```
+3. Start the service
+   ```bash
+   npm start
+   ```
+   During development you can use `npm run dev` to restart automatically.
 
-2. Create a `.env` file (already included) and set the following values:
-
-```
-MONGO_URI=mongodb://localhost:27017/creditcards
-CRON_SCHEDULE=0 */12 * * *
-PORT=3000
-```
-
-3. Start the server
-
-```bash
-npm start
-```
-
-During development you can use `npm run dev` to start with nodemon.
-
-## Endpoints
-
-- `GET /api/cards` – returns all stored credit cards.
-
-## Data Sync
-
-A cron job runs every 12 hours (configurable via `.env`) to fetch credit card products from banks specified in `src/data/banks.json` using the Open Banking APIs.
+The service connects to MongoDB, then periodically fetches products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `TRANS_AND_SAVINGS_ACCOUNTS` or `CREDIT_CARDS` are processed. Each product is stored or updated in the `CreditCard` collection based on `bankName` and `productId`.
