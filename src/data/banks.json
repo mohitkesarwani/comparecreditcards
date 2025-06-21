@@ -1,0 +1,10 @@
+[
+  {
+    "bankName": "ANZ",
+    "baseUrl": "https://api.anz/cds-au/v1"  
+  },
+  {
+    "bankName": "NAB",
+    "baseUrl": "https://api.nab/cds-au/v1" 
+  }
+]
