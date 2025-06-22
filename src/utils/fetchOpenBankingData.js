@@ -54,14 +54,14 @@ export const fetchOpenBankingData = async () => {
   for (const bank of banks) {
     console.log(`Fetching products for ${bank.name}`);
     try {
-      const listUrl = `${bank.baseUrl}/products`;
+      const listUrl = `${bank.baseUrl}/banking/products`;
       const listRes = await axiosGetLogged(listUrl, HEADERS);
       const products = listRes.data?.data?.products || [];
       const creditCards = products.filter(p => p.productCategory === 'CREDIT_CARD' || p.productCategory === 'CRED_AND_CHRG_CARDS');
 
       for (const item of creditCards) {
         try {
-          const detailUrl = `${bank.baseUrl}/products/${item.productId}`;
+          const detailUrl = `${bank.baseUrl}/banking/products/${item.productId}`;
           const detailRes = await axiosGetLogged(detailUrl, HEADERS);
           const detail = detailRes.data?.data?.product || detailRes.data?.data || {};
 
