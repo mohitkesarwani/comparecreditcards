@@ -2,6 +2,13 @@ import axios from 'axios';
 import banks from '../constants/banks.js';
 import CreditCard from '../models/CreditCard.js';
 
+const logRequest = (method, url, headers) => {
+  const headerPairs = Object.entries(headers)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(', ');
+  console.log(`HTTP ${method.toUpperCase()} ${url} with headers: ${headerPairs}`);
+};
+
 const DEFAULT_LIST_HEADERS = {
   'x-v': '4',
   Accept: 'application/json'
@@ -31,6 +38,13 @@ const logApiError = (prefix, err) => {
     message += ` [${url}]`;
   }
   console.error(message);
+  const reqHeaders = err.config?.headers;
+  if (reqHeaders) {
+    const headerPairs = Object.entries(reqHeaders)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    console.error('Request headers:', headerPairs);
+  }
   if (err.response?.data) {
     console.error('Response data:', JSON.stringify(err.response.data));
   }
@@ -43,13 +57,17 @@ export const fetchCards = async () => {
   for (const bank of banks) {
     console.log(`Fetching cards for ${bank.name}`);
     try {
-      const listRes = await axios.get(`${bank.baseUrl}/banking/products`, { headers: LIST_HEADERS });
+      const listUrl = `${bank.baseUrl}/banking/products`;
+      logRequest('get', listUrl, LIST_HEADERS);
+      const listRes = await axios.get(listUrl, { headers: LIST_HEADERS });
       const products = listRes.data?.data?.products || [];
       const creditCards = products.filter(p => p.productCategory === 'CRED_AND_CHRG_CARDS');
 
       for (const product of creditCards) {
         try {
-          const detailRes = await axios.get(`${bank.baseUrl}/banking/products/${product.productId}`, { headers: DETAIL_HEADERS });
+          const detailUrl = `${bank.baseUrl}/banking/products/${product.productId}`;
+          logRequest('get', detailUrl, DETAIL_HEADERS);
+          const detailRes = await axios.get(detailUrl, { headers: DETAIL_HEADERS });
           const detail = detailRes.data?.data?.product || {};
 
           const record = {
