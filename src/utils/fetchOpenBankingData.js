@@ -35,15 +35,45 @@ const logApiError = (prefix, err) => {
   }
 };
 
+const DEFAULT_X_V = process.env.DEFAULT_X_V || '4';
+const RETRY_FROM_X_V = process.env.X_V_RETRY_FROM || '3';
+const RETRY_TO_X_V = process.env.X_V_RETRY_TO || '4';
+
 const axiosGetLogged = async (url, headers) => {
-  logRequest('get', url, headers);
-  return await axios.get(url, { headers });
+  try {
+    logRequest('get', url, headers);
+    return await axios.get(url, { headers });
+  } catch (err) {
+    const version = headers['x-v'] || headers['X-V'];
+    if (version === RETRY_FROM_X_V) {
+      const retryHeaders = { ...headers, 'x-v': RETRY_TO_X_V };
+      console.warn(
+        `Request failed with x-v ${RETRY_FROM_X_V}. Retrying ${url} with x-v ${RETRY_TO_X_V}.`
+      );
+      logRequest('get', url, retryHeaders);
+      return await axios.get(url, { headers: retryHeaders });
+    }
+    throw err;
+  }
 };
 
-const HEADERS = {
-  'x-v': '3',
+const DEFAULT_LIST_HEADERS = {
+  'x-v': DEFAULT_X_V,
   Accept: 'application/json'
 };
+
+const DEFAULT_DETAIL_HEADERS = {
+  'x-v': DEFAULT_X_V,
+  Accept: 'application/json'
+};
+
+const LIST_HEADERS = process.env.GET_PRODUCTS_HEADERS
+  ? JSON.parse(process.env.GET_PRODUCTS_HEADERS)
+  : DEFAULT_LIST_HEADERS;
+
+const DETAIL_HEADERS = process.env.GET_PRODUCT_DETAIL_HEADERS
+  ? JSON.parse(process.env.GET_PRODUCT_DETAIL_HEADERS)
+  : DEFAULT_DETAIL_HEADERS;
 
 export const fetchOpenBankingData = async () => {
   // Remove any previously stored credit card records so the
@@ -55,14 +85,14 @@ export const fetchOpenBankingData = async () => {
     console.log(`Fetching products for ${bank.name}`);
     try {
       const listUrl = `${bank.baseUrl}/banking/products`;
-      const listRes = await axiosGetLogged(listUrl, HEADERS);
+      const listRes = await axiosGetLogged(listUrl, LIST_HEADERS);
       const products = listRes.data?.data?.products || [];
       const creditCards = products.filter(p => p.productCategory === 'CREDIT_CARD' || p.productCategory === 'CRED_AND_CHRG_CARDS');
 
       for (const item of creditCards) {
         try {
           const detailUrl = `${bank.baseUrl}/banking/products/${item.productId}`;
-          const detailRes = await axiosGetLogged(detailUrl, HEADERS);
+          const detailRes = await axiosGetLogged(detailUrl, DETAIL_HEADERS);
           const detail = detailRes.data?.data?.product || detailRes.data?.data || {};
 
           const record = {
