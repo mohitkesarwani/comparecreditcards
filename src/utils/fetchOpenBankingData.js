@@ -8,6 +8,11 @@ const HEADERS = {
 };
 
 export const fetchOpenBankingData = async () => {
+  // Remove any previously stored credit card records so the
+  // database only contains the latest data on each run.
+  console.log('Clearing existing credit card data');
+  await CreditCard.deleteMany({});
+
   for (const bank of banks) {
     console.log(`Fetching products for ${bank.name}`);
     try {
