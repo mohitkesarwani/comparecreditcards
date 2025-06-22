@@ -2,6 +2,44 @@ import axios from 'axios';
 import banks from '../constants/banks.js';
 import CreditCard from '../models/CreditCard.js';
 
+const logRequest = (method, url, headers) => {
+  const headerPairs = Object.entries(headers)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(', ');
+  console.log(`HTTP ${method.toUpperCase()} ${url} with headers: ${headerPairs}`);
+};
+
+const logApiError = (prefix, err) => {
+  const status = err.response?.status;
+  const url = err.config?.url;
+  let message = `${prefix}: ${err.message}`;
+  if (status) {
+    message += ` (status ${status})`;
+  }
+  if (url) {
+    message += ` [${url}]`;
+  }
+  console.error(message);
+  const reqHeaders = err.config?.headers;
+  if (reqHeaders) {
+    const headerPairs = Object.entries(reqHeaders)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    console.error('Request headers:', headerPairs);
+  }
+  if (err.response?.data) {
+    console.error('Response data:', JSON.stringify(err.response.data));
+  }
+  if (err.stack) {
+    console.error(err.stack);
+  }
+};
+
+const axiosGetLogged = async (url, headers) => {
+  logRequest('get', url, headers);
+  return await axios.get(url, { headers });
+};
+
 const HEADERS = {
   'x-v': '3',
   Accept: 'application/json'
@@ -17,14 +55,14 @@ export const fetchOpenBankingData = async () => {
     console.log(`Fetching products for ${bank.name}`);
     try {
       const listUrl = `${bank.baseUrl}/products`;
-      const listRes = await axios.get(listUrl, { headers: HEADERS });
+      const listRes = await axiosGetLogged(listUrl, HEADERS);
       const products = listRes.data?.data?.products || [];
       const creditCards = products.filter(p => p.productCategory === 'CREDIT_CARD' || p.productCategory === 'CRED_AND_CHRG_CARDS');
 
       for (const item of creditCards) {
         try {
           const detailUrl = `${bank.baseUrl}/products/${item.productId}`;
-          const detailRes = await axios.get(detailUrl, { headers: HEADERS });
+          const detailRes = await axiosGetLogged(detailUrl, HEADERS);
           const detail = detailRes.data?.data?.product || detailRes.data?.data || {};
 
           const record = {
@@ -108,11 +146,11 @@ export const fetchOpenBankingData = async () => {
           );
           console.log(`Saved ${record.productId} from ${bank.name}`);
         } catch (err) {
-          console.error(`Failed to process product ${item.productId} from ${bank.name}:`, err.message);
+          logApiError(`Failed to process product ${item.productId} from ${bank.name}`, err);
         }
       }
     } catch (err) {
-      console.error(`Failed to fetch product list from ${bank.name}:`, err.message);
+      logApiError(`Failed to fetch product list from ${bank.name}`, err);
     }
   }
 };
