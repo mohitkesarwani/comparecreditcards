@@ -1,16 +1,32 @@
 import cron from 'node-cron';
 import { fetchCards } from '../services/fetchCards.js';
 
-export const startCronJob = () => {
-  const defaultSchedule = '0 */12 * * *';
-  const envSchedule = process.env.CRON_SCHEDULE;
-  const schedule = cron.validate(envSchedule) ? envSchedule : defaultSchedule;
+const scheduleFromHours = hours => {
+  if (hours >= 24) return '0 0 * * *';
+  if (hours >= 1 && Number.isInteger(hours)) return `0 */${hours} * * *`;
+  const minutes = Math.round(hours * 60);
+  return `*/${minutes} * * * *`;
+};
 
-  if (envSchedule && envSchedule !== schedule) {
-    console.warn(`Invalid CRON_SCHEDULE \"${envSchedule}\". Using \"${schedule}\" instead.`);
+export const startCronJob = () => {
+  const defaultHours = 12;
+  const raw = process.env.CRON_SCHEDULE;
+  const envHours = parseFloat(raw);
+  const valid = !Number.isNaN(envHours) && envHours > 0 && envHours <= 24;
+  let hours = valid ? envHours : defaultHours;
+
+  if (!valid && raw) {
+    console.warn(`Invalid CRON_SCHEDULE \"${raw}\". Using ${hours} hours instead.`);
   }
 
-  console.log(`Cron job scheduled with ${schedule}`);
+  let schedule = scheduleFromHours(hours);
+  if (!cron.validate(schedule)) {
+    console.warn(`Generated cron expression \"${schedule}\" is invalid. Falling back to ${defaultHours} hours.`);
+    hours = defaultHours;
+    schedule = scheduleFromHours(hours);
+  }
+
+  console.log(`Cron job scheduled every ${hours} hour(s) with expression \"${schedule}\"`);
   cron.schedule(schedule, async () => {
     console.log('Cron job started');
     await fetchCards();

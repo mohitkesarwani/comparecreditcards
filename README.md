@@ -13,7 +13,7 @@ This service fetches credit card product details from Australian bank Consumer D
    cp .env.example .env
    ```
    - `MONGO_URI` – MongoDB connection string
-   - `CRON_SCHEDULE` – cron expression used to run the fetch job
+  - `CRON_SCHEDULE` – number of hours between fetches. Accepts values from `0.1` up to `24`; for example `1` runs hourly and `0.5` runs every 30 minutes.
    - `GET_PRODUCTS_HEADERS` – JSON object of headers for the product list request
    - `GET_PRODUCT_DETAIL_HEADERS` – JSON object of headers for the product detail request
 
