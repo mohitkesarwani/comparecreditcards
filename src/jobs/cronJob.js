@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { fetchCards } from '../services/fetchCards.js';
+import { fetchOpenBankingData } from '../utils/fetchOpenBankingData.js';
 
 const scheduleFromHours = hours => {
   if (hours >= 24) return '0 0 * * *';
@@ -29,7 +29,7 @@ export const startCronJob = () => {
   console.log(`Cron job scheduled every ${hours} hour(s) with expression \"${schedule}\"`);
   cron.schedule(schedule, async () => {
     console.log('Cron job started');
-    await fetchCards();
+    await fetchOpenBankingData();
     console.log('Cron job finished');
   });
 };
