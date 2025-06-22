@@ -9,13 +9,35 @@ const logRequest = (method, url, headers) => {
   console.log(`HTTP ${method.toUpperCase()} ${url} with headers: ${headerPairs}`);
 };
 
+const DEFAULT_X_V = process.env.DEFAULT_X_V || '4';
+const RETRY_FROM_X_V = process.env.X_V_RETRY_FROM || '3';
+const RETRY_TO_X_V = process.env.X_V_RETRY_TO || '4';
+
+const axiosGetWithRetry = async (url, headers) => {
+  try {
+    logRequest('get', url, headers);
+    return await axios.get(url, { headers });
+  } catch (err) {
+    const version = headers['x-v'] || headers['X-V'];
+    if (version === RETRY_FROM_X_V) {
+      const retryHeaders = { ...headers, 'x-v': RETRY_TO_X_V };
+      console.warn(
+        `Request failed with x-v ${RETRY_FROM_X_V}. Retrying ${url} with x-v ${RETRY_TO_X_V}.`
+      );
+      logRequest('get', url, retryHeaders);
+      return await axios.get(url, { headers: retryHeaders });
+    }
+    throw err;
+  }
+};
+
 const DEFAULT_LIST_HEADERS = {
-  'x-v': '4',
+  'x-v': DEFAULT_X_V,
   Accept: 'application/json'
 };
 
 const DEFAULT_DETAIL_HEADERS = {
-  'x-v': '4',
+  'x-v': DEFAULT_X_V,
   Accept: 'application/json'
 };
 
@@ -58,16 +80,14 @@ export const fetchCards = async () => {
     console.log(`Fetching cards for ${bank.name}`);
     try {
       const listUrl = `${bank.baseUrl}/banking/products`;
-      logRequest('get', listUrl, LIST_HEADERS);
-      const listRes = await axios.get(listUrl, { headers: LIST_HEADERS });
+      const listRes = await axiosGetWithRetry(listUrl, LIST_HEADERS);
       const products = listRes.data?.data?.products || [];
       const creditCards = products.filter(p => p.productCategory === 'CRED_AND_CHRG_CARDS');
 
       for (const product of creditCards) {
         try {
           const detailUrl = `${bank.baseUrl}/banking/products/${product.productId}`;
-          logRequest('get', detailUrl, DETAIL_HEADERS);
-          const detailRes = await axios.get(detailUrl, { headers: DETAIL_HEADERS });
+          const detailRes = await axiosGetWithRetry(detailUrl, DETAIL_HEADERS);
           const detail = detailRes.data?.data?.product || {};
 
           const record = {
