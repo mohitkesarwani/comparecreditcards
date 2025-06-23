@@ -32,13 +32,21 @@ The service connects to MongoDB, then periodically fetches credit card products 
 
 ## API
 
-After starting the service, an HTTP server exposes the following endpoint:
+After starting the service, an HTTP server exposes the following endpoints:
 
 ```
 GET /api/credit-cards
 ```
 
-Returns all credit card documents stored in MongoDB as JSON. The server listens on the port defined by the `PORT` environment variable (default `3000`).
+Returns all credit card documents stored in MongoDB as JSON.
+
+```
+GET /api/credit-cards/:id
+```
+
+Returns a single credit card by its MongoDB `_id` or `productId`.
+
+The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
 ## Python Example
 
