@@ -20,6 +20,7 @@ This service fetches credit card product details from Australian bank Consumer D
   - `X_V_RETRY_FROM` – `x-v` value that triggers a retry when a request fails
   - `X_V_RETRY_TO` – `x-v` version used for that retry
     (requests failing with `X_V_RETRY_FROM` will automatically retry with `X_V_RETRY_TO`)
+  - `PORT` – port for the HTTP API server (default `3000`)
 
 3. Start the service
    ```bash
@@ -28,6 +29,16 @@ This service fetches credit card product details from Australian bank Consumer D
    During development you can use `npm run dev` to restart automatically.
 
 The service connects to MongoDB, then periodically fetches credit card products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `CRED_AND_CHRG_CARDS` are processed. Each card is stored or updated in the `CreditCard` collection based on `bankName` and `productId`. On each run the service removes any existing card records so the database always contains only the most recent data returned by the APIs.
+
+## API
+
+After starting the service, an HTTP server exposes the following endpoint:
+
+```
+GET /api/credit-cards
+```
+
+Returns all credit card documents stored in MongoDB as JSON. The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
 ## Python Example
 
