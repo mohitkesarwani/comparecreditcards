@@ -3,7 +3,6 @@ import CreditCard from '../models/CreditCard.js';
 
 const router = express.Router();
 
-// GET /api/credit-cards
 router.get('/', async (req, res) => {
   try {
     const cards = await CreditCard.find({});
@@ -14,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/credit-cards/:id
+
 router.get('/:id', async (req, res) => {
   try {
     let card = await CreditCard.findById(req.params.id);
