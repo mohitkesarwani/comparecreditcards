@@ -1,6 +1,6 @@
-# Credit Card Data Service
+# Credit Card and Residential Mortgage Data Service
 
-This service fetches credit card product details from Australian bank Consumer Data Standards APIs and stores them in MongoDB. Data is refreshed on a schedule using `node-cron`.
+This service fetches credit card and residential mortgage product details from Australian bank Consumer Data Standards APIs and stores them in MongoDB. Data is refreshed on a schedule using `node-cron`.
 
 ## Setup
 
@@ -12,7 +12,8 @@ This service fetches credit card product details from Australian bank Consumer D
    ```bash
    cp .env.example .env
    ```
-   - `MONGO_URI` – MongoDB connection string
+   - `MONGO_URI` – MongoDB connection string for credit card data
+  - `MONGO_MORTGAGE_URI` – MongoDB connection string for residential mortgage data
   - `CRON_SCHEDULE` – number of hours between fetches. Accepts values from `0.1` up to `24`; for example `1` runs hourly and `0.5` runs every 30 minutes.
   - `GET_PRODUCTS_HEADERS` – JSON object of headers for the product list request
   - `GET_PRODUCT_DETAIL_HEADERS` – JSON object of headers for the product detail request
@@ -45,6 +46,18 @@ GET /api/credit-cards/:id
 ```
 
 Returns a single credit card by its MongoDB `_id` or `productId`.
+
+```
+GET /api/residential-mortgages
+```
+
+Returns all residential mortgage documents stored in MongoDB as JSON.
+
+```
+GET /api/residential-mortgages/:id
+```
+
+Returns a single residential mortgage by its MongoDB `_id` or `productId`.
 
 The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
