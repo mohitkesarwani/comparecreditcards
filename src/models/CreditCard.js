@@ -88,7 +88,9 @@ const CreditCardSchema = new mongoose.Schema({
   features: [featureSchema],
   constraints: [constraintSchema],
   eligibility: [eligibilitySchema],
-  lendingRates: [lendingRateSchema]
+  lendingRates: [lendingRateSchema],
+  isSponsored: { type: Boolean, default: false },
+  sponsorRank: { type: Number, default: 0 }
 }, { timestamps: true });
 
 CreditCardSchema.index({ productId: 1 }, { unique: true });

@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const cards = await CreditCard.find({});
+    const cards = await CreditCard.find({}).sort({ isSponsored: -1, sponsorRank: 1 });
     res.json(cards);
   } catch (err) {
     console.error(err);
