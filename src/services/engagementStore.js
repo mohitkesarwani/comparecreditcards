@@ -1,16 +1,74 @@
-export const engagements = {};
+import Engagement from '../models/Engagement.js';
 
+export const engagements = new Map(); // in-memory cache
 export const likedIpCache = new Map();
+const TTL = 60 * 1000; // 1 minute
 
-export const getEngagement = productId => {
-  if (!engagements[productId]) {
-    engagements[productId] = { likes: 0, shares: 0, comments: 0, reviews: [], rating: 0 };
-  }
-  return engagements[productId];
+const setCache = (id, doc) => {
+  engagements.set(id, { data: doc, expires: Date.now() + TTL });
 };
 
-export const populateDummyEngagements = () => {
-  if (Object.keys(engagements).length > 0) return;
+export const getEngagement = async productId => {
+  const cached = engagements.get(productId);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+  let doc = await Engagement.findOne({ productId });
+  if (!doc) {
+    doc = await Engagement.create({ productId });
+  }
+  const data = doc.toObject();
+  setCache(productId, data);
+  return data;
+};
+
+export const incrementLike = async productId => {
+  const doc = await Engagement.findOneAndUpdate(
+    { productId },
+    { $inc: { likes: 1 } },
+    { new: true, upsert: true }
+  );
+  setCache(productId, doc.toObject());
+  return doc.likes;
+};
+
+export const incrementShare = async productId => {
+  const doc = await Engagement.findOneAndUpdate(
+    { productId },
+    { $inc: { shares: 1 } },
+    { new: true, upsert: true }
+  );
+  setCache(productId, doc.toObject());
+  return doc.shares;
+};
+
+export const addReviewToProduct = async (productId, review) => {
+  review.timestamp = new Date();
+  let doc = await Engagement.findOne({ productId });
+  if (!doc) {
+    doc = await Engagement.create({
+      productId,
+      reviews: [review],
+      comments: 1,
+      rating: review.stars || 0
+    });
+  } else {
+    doc.reviews.push(review);
+    doc.comments = doc.reviews.length;
+    const avg =
+      doc.reviews.reduce((a, r) => a + (r.stars || 0), 0) / doc.reviews.length;
+    doc.rating = Number(avg.toFixed(2));
+    await doc.save();
+  }
+  setCache(productId, doc.toObject());
+  return review;
+};
+
+export const clearEngagementCache = () => engagements.clear();
+
+export const populateDummyEngagements = async () => {
+  const count = await Engagement.countDocuments();
+  if (count > 0) return;
   const sample = [
     {
       id: '123',
@@ -50,13 +108,16 @@ export const populateDummyEngagements = () => {
     }
   ];
   for (const item of sample) {
-    const data = getEngagement(item.id);
-    data.likes = item.likes;
-    data.shares = item.shares;
-    for (const r of item.reviews) {
-      data.reviews.push({ ...r, timestamp: new Date() });
-    }
-    data.comments = data.reviews.length;
-    data.rating = data.reviews.reduce((sum, r) => sum + r.stars, 0) / data.reviews.length;
+    const reviews = item.reviews.map(r => ({ ...r, timestamp: new Date() }));
+    const rating =
+      reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length;
+    await Engagement.create({
+      productId: item.id,
+      likes: item.likes,
+      shares: item.shares,
+      comments: reviews.length,
+      rating,
+      reviews
+    });
   }
 };

@@ -22,7 +22,7 @@ export const startServer = async () => {
   app.use(express.json());
   app.use(mockAuth);
 
-  populateDummyEngagements();
+  await populateDummyEngagements();
 
   app.use('/api/residential-mortgages', residentialMortgagesRouter);
   app.use('/api/credit-cards', creditCardsRouter);
