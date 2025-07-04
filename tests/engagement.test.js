@@ -1,17 +1,35 @@
 import request from 'supertest';
 import express from 'express';
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import engagementRoutes from '../src/routes/engagementRoutes.js';
-import { engagements, likedIpCache } from '../src/services/engagementStore.js';
+import { clearEngagementCache, likedIpCache } from '../src/services/engagementStore.js';
 
 describe('Engagement API', () => {
   let app;
+  let mongod;
+
+  beforeAll(async () => {
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
+    await mongoose.connect(uri);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
+    await mongod.stop();
+  });
 
   beforeEach(() => {
     app = express();
     app.use(express.json());
     app.use('/api/engagement', engagementRoutes);
-    for (const key of Object.keys(engagements)) delete engagements[key];
+    clearEngagementCache();
     likedIpCache.clear();
+  });
+
+  afterEach(async () => {
+    await mongoose.connection.dropDatabase();
   });
 
   const productId = 'p1';
