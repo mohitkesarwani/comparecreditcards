@@ -1,15 +1,21 @@
 import express from 'express';
-import { engagements, likedIpCache, getEngagement } from '../services/engagementStore.js';
+import {
+  likedIpCache,
+  getEngagement,
+  incrementLike,
+  incrementShare,
+  addReviewToProduct
+} from '../services/engagementStore.js';
 
 const router = express.Router();
 
-router.get('/:productId', (req, res) => {
+router.get('/:productId/engagement', async (req, res) => {
   const { productId } = req.params;
-  const data = getEngagement(productId);
+  const data = await getEngagement(productId);
   res.json(data);
 });
 
-router.post('/:productId/like', (req, res) => {
+router.post('/:productId/like', async (req, res) => {
   const { productId } = req.params;
   const ip = req.ip;
   let ips = likedIpCache.get(productId);
@@ -21,35 +27,33 @@ router.post('/:productId/like', (req, res) => {
     return res.status(429).json({ message: 'Already liked' });
   }
   ips.add(ip);
-  const data = getEngagement(productId);
-  data.likes += 1;
-  res.json({ likes: data.likes });
+  const likes = await incrementLike(productId);
+  res.json({ likes });
 });
 
-router.post('/:productId/share', (req, res) => {
+router.post('/:productId/share', async (req, res) => {
   const { productId } = req.params;
-  const data = getEngagement(productId);
-  data.shares += 1;
-  res.json({ shares: data.shares });
+  const shares = await incrementShare(productId);
+  res.json({ shares });
 });
 
-router.get('/:productId/reviews', (req, res) => {
+router.get('/:productId/reviews', async (req, res) => {
   const { productId } = req.params;
-  const data = getEngagement(productId);
+  const data = await getEngagement(productId);
   res.json(data.reviews);
 });
 
-router.post('/:productId/review', (req, res) => {
+router.post('/:productId/review', async (req, res) => {
   const { productId } = req.params;
   const { name, comment, stars } = req.body;
   if (!name || !comment || typeof stars !== 'number') {
     return res.status(400).json({ message: 'Invalid review' });
   }
-  const data = getEngagement(productId);
-  const review = { name, comment, stars, timestamp: new Date() };
-  data.reviews.push(review);
-  data.comments = data.reviews.length;
-  data.rating = data.reviews.reduce((sum, r) => sum + r.stars, 0) / data.reviews.length;
+  const review = await addReviewToProduct(productId, {
+    name,
+    comment,
+    stars
+  });
   res.status(201).json(review);
 });
 
