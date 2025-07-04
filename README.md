@@ -59,6 +59,30 @@ GET /api/residential-mortgages/:id
 
 Returns a single residential mortgage by its MongoDB `_id` or `productId`.
 
+```
+GET /api/interactions/:productId?type=creditCard|homeLoan
+```
+
+Returns interaction data (likes, recent comments and share count) for the specified product.
+
+```
+POST /api/interactions/:productId/like?type=creditCard|homeLoan
+```
+
+Toggles like/unlike for the authenticated user and returns the updated like count.
+
+```
+POST /api/interactions/:productId/comment?type=creditCard|homeLoan
+```
+
+Adds a comment for the authenticated user. Accepts `{ text: "comment" }` in the request body.
+
+```
+POST /api/interactions/:productId/share?type=creditCard|homeLoan
+```
+
+Increments and returns the product share count.
+
 The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
 ## Python Example

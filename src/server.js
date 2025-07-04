@@ -3,6 +3,8 @@ import cors from 'cors';
 import axios from 'axios';
 import creditCardsRouter from './routes/creditCards.js';
 import residentialMortgagesRouter from './routes/residentialMortgages.js';
+import interactionsRouter from './routes/interactions.js';
+import { mockAuth } from './middleware/auth.js';
 import { connectDB } from './config/db.js';
 import Referral from './models/Referral.js';
 import Lead from './models/Lead.js';
@@ -16,9 +18,11 @@ export const startServer = async () => {
 
   app.use(cors());
   app.use(express.json());
+  app.use(mockAuth);
 
   app.use('/api/residential-mortgages', residentialMortgagesRouter);
   app.use('/api/credit-cards', creditCardsRouter);
+  app.use('/api/interactions', interactionsRouter);
 
   app.post('/api/referrals', async (req, res) => {
     try {
