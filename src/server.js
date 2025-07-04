@@ -4,6 +4,8 @@ import axios from 'axios';
 import creditCardsRouter from './routes/creditCards.js';
 import residentialMortgagesRouter from './routes/residentialMortgages.js';
 import interactionsRouter from './routes/interactions.js';
+import engagementRoutes from './routes/engagementRoutes.js';
+import { populateDummyEngagements } from './services/engagementStore.js';
 import { mockAuth } from './middleware/auth.js';
 import { connectDB } from './config/db.js';
 import Referral from './models/Referral.js';
@@ -20,9 +22,12 @@ export const startServer = async () => {
   app.use(express.json());
   app.use(mockAuth);
 
+  populateDummyEngagements();
+
   app.use('/api/residential-mortgages', residentialMortgagesRouter);
   app.use('/api/credit-cards', creditCardsRouter);
   app.use('/api/interactions', interactionsRouter);
+  app.use('/api/engagement', engagementRoutes);
 
   app.post('/api/referrals', async (req, res) => {
     try {
