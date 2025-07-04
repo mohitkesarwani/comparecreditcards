@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.get('/:productId', async (req, res) => {
+router.get('/:productId/engagement', async (req, res) => {
   const { productId } = req.params;
   const data = await getEngagement(productId);
   res.json(data);

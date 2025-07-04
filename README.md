@@ -83,6 +83,34 @@ POST /api/interactions/:productId/share?type=creditCard|homeLoan
 
 Increments and returns the product share count.
 
+### Engagement
+
+These endpoints track likes, shares and reviews for any product ID.
+
+```
+GET /api/products/:id/engagement
+```
+
+Returns the engagement stats for the specified product.
+
+```
+POST /api/products/:id/like
+```
+
+Increments and returns the product like count. Limited to one request per IP.
+
+```
+POST /api/products/:id/share
+```
+
+Increments and returns the share count.
+
+```
+POST /api/products/:id/review
+```
+
+Adds a review with `{ name, comment, stars }` and updates the average rating.
+
 The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
 ## Python Example

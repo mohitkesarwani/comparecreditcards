@@ -23,7 +23,7 @@ describe('Engagement API', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    app.use('/api/engagement', engagementRoutes);
+    app.use('/api/products', engagementRoutes);
     clearEngagementCache();
     likedIpCache.clear();
   });
@@ -35,7 +35,7 @@ describe('Engagement API', () => {
   const productId = 'p1';
 
   test('GET defaults', async () => {
-    const res = await request(app).get(`/api/engagement/${productId}`);
+    const res = await request(app).get(`/api/products/${productId}/engagement`);
     expect(res.status).toBe(200);
     expect(res.body.likes).toBe(0);
     expect(res.body.shares).toBe(0);
@@ -45,15 +45,15 @@ describe('Engagement API', () => {
   });
 
   test('like once per ip', async () => {
-    let res = await request(app).post(`/api/engagement/${productId}/like`);
+    let res = await request(app).post(`/api/products/${productId}/like`);
     expect(res.status).toBe(200);
     expect(res.body.likes).toBe(1);
-    res = await request(app).post(`/api/engagement/${productId}/like`);
+    res = await request(app).post(`/api/products/${productId}/like`);
     expect(res.status).toBe(429);
   });
 
   test('share increments', async () => {
-    const res = await request(app).post(`/api/engagement/${productId}/share`);
+    const res = await request(app).post(`/api/products/${productId}/share`);
     expect(res.status).toBe(200);
     expect(res.body.shares).toBe(1);
   });
@@ -61,12 +61,12 @@ describe('Engagement API', () => {
   test('review updates rating', async () => {
     const review = { name: 'Alice', comment: 'Nice', stars: 4 };
     let res = await request(app)
-      .post(`/api/engagement/${productId}/review`)
+      .post(`/api/products/${productId}/review`)
       .send(review);
     expect(res.status).toBe(201);
     expect(res.body.stars).toBe(4);
 
-    res = await request(app).get(`/api/engagement/${productId}`);
+    res = await request(app).get(`/api/products/${productId}/engagement`);
     expect(res.body.comments).toBe(1);
     expect(res.body.rating).toBe(4);
   });

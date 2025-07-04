@@ -27,7 +27,7 @@ export const startServer = async () => {
   app.use('/api/residential-mortgages', residentialMortgagesRouter);
   app.use('/api/credit-cards', creditCardsRouter);
   app.use('/api/interactions', interactionsRouter);
-  app.use('/api/engagement', engagementRoutes);
+  app.use('/api/products', engagementRoutes);
 
   app.post('/api/referrals', async (req, res) => {
     try {
