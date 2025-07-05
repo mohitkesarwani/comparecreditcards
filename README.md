@@ -111,6 +111,19 @@ POST /api/products/:id/review
 
 Adds a review with `{ name, comment, stars }` and updates the average rating.
 
+```
+POST /api/comments
+```
+
+Creates a new comment document. The body must include `productId`, `userId`,
+`comment`, `rating` (1-5) and `timestamp` as an ISO date string.
+
+```
+GET /api/comments?productId=xxxxx
+```
+
+Returns all comments for the specified product, sorted by most recent.
+
 The server listens on the port defined by the `PORT` environment variable (default `3000`).
 
 ## Python Example

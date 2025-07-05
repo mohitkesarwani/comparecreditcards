@@ -6,6 +6,7 @@ import residentialMortgagesRouter from './routes/residentialMortgages.js';
 import interactionsRouter from './routes/interactions.js';
 import engagementRoutes from './routes/engagementRoutes.js';
 import shareRoutes from './routes/shareRoutes.js';
+import commentsRouter from './routes/comments.js';
 import { populateDummyEngagements } from './services/engagementStore.js';
 import { mockAuth } from './middleware/auth.js';
 import { connectDB } from './config/db.js';
@@ -30,6 +31,7 @@ export const startServer = async () => {
   app.use('/api/interactions', interactionsRouter);
   app.use('/api/products', engagementRoutes);
   app.use('/api', shareRoutes);
+  app.use('/api/comments', commentsRouter);
 
   app.post('/api/referrals', async (req, res) => {
     try {
