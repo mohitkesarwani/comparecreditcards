@@ -92,7 +92,8 @@ const ResidentialMortgageSchema = new mongoose.Schema({
   features: [featureSchema],
   constraints: [constraintSchema],
   eligibility: [eligibilitySchema],
-  lendingRates: [lendingRateSchema]
+  lendingRates: [lendingRateSchema],
+  shareCount: { type: Number, default: 0 }
 }, { timestamps: true });
 ResidentialMortgageSchema.index({ productId: 1 }, { unique: true });
 
