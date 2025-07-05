@@ -1,14 +1,16 @@
 import express from 'express';
 import Joi from 'joi';
-import mongoose from 'mongoose';
-import Comment from '../models/Comment.js';
+import { addCommentToProduct } from '../services/engagementStore.js';
+import Engagement from '../models/Engagement.js';
 
 const router = express.Router();
 
 const schema = Joi.object({
   userId: Joi.string().trim().required(),
   entityId: Joi.string().required(),
-  entityType: Joi.string().valid('credit-cards', 'home-loans').required(),
+  entityType: Joi.string()
+    .valid('credit-cards', 'home-loans', 'deposit')
+    .required(),
   commentText: Joi.string().min(1).required()
 });
 
@@ -19,20 +21,18 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ message: 'Invalid comment' });
   }
 
-  // Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(value.entityId)) {
-    console.error('Invalid entityId:', value.entityId);
-    return res.status(400).json({ message: 'Invalid comment' });
-  }
-
   try {
-    const comment = await Comment.create({
+    const comment = await addCommentToProduct(value.entityId, {
+      userId: value.userId,
+      comment: value.commentText
+    });
+    res.status(201).json({
       userId: value.userId,
       entityId: value.entityId,
       entityType: value.entityType,
-      commentText: value.commentText
+      commentText: comment.comment,
+      createdAt: comment.timestamp
     });
-    res.status(201).json(comment);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -45,9 +45,15 @@ router.get('/', async (req, res) => {
     return res.status(400).json({ message: 'entityId query param required' });
   }
   try {
-    const comments = await Comment.find({ entityId })
-      .sort({ createdAt: -1 })
-      .lean();
+    const doc = await Engagement.findOne({ productId: entityId }).lean();
+    const comments = (doc?.comments || [])
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .map(c => ({
+        userId: c.userId,
+        entityId,
+        commentText: c.comment,
+        createdAt: c.timestamp
+      }));
     res.json(comments);
   } catch (err) {
     console.error(err);
