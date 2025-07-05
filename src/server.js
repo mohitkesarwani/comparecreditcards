@@ -7,6 +7,7 @@ import interactionsRouter from './routes/interactions.js';
 import engagementRoutes from './routes/engagementRoutes.js';
 import shareRoutes from './routes/shareRoutes.js';
 import commentsRouter from './routes/comments.js';
+import reviewsRouter from './routes/reviews.js';
 import { populateDummyEngagements } from './services/engagementStore.js';
 import { mockAuth } from './middleware/auth.js';
 import { connectDB } from './config/db.js';
@@ -32,6 +33,7 @@ export const startServer = async () => {
   app.use('/api/products', engagementRoutes);
   app.use('/api', shareRoutes);
   app.use('/api/comments', commentsRouter);
+  app.use('/api/reviews', reviewsRouter);
 
   app.post('/api/referrals', async (req, res) => {
     try {

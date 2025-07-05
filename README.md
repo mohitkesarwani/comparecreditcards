@@ -112,6 +112,15 @@ POST /api/products/:id/review
 Adds a review with `{ name, comment, stars }` and updates the average rating.
 
 ```
+POST /api/reviews
+```
+
+Creates a review using `{ userId, entityId, entityType, rating, commentText }`.
+This route is an alias for `POST /api/products/:id/review` where `id` is the
+`entityId` value. The average rating and comment count are updated
+accordingly.
+
+```
 POST /api/comments
 ```
 
