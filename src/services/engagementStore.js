@@ -18,8 +18,16 @@ export const getEngagement = async productId => {
     doc = await Engagement.create({ productId });
   }
   const data = doc.toObject();
-  setCache(productId, data);
-  return data;
+  const result = {
+    productId: data.productId,
+    likes: data.likes || 0,
+    shares: data.shares || 0,
+    comments: data.comments ? data.comments.length : 0,
+    reviews: data.reviews || [],
+    rating: data.rating || 0
+  };
+  setCache(productId, result);
+  return result;
 };
 
 export const incrementLike = async productId => {
@@ -28,7 +36,9 @@ export const incrementLike = async productId => {
     { $inc: { likes: 1 } },
     { new: true, upsert: true }
   );
-  setCache(productId, doc.toObject());
+  const data = await getEngagement(productId);
+  data.likes = doc.likes;
+  setCache(productId, data);
   return doc.likes;
 };
 
@@ -38,7 +48,9 @@ export const incrementShare = async productId => {
     { $inc: { shares: 1 } },
     { new: true, upsert: true }
   );
-  setCache(productId, doc.toObject());
+  const data = await getEngagement(productId);
+  data.shares = doc.shares;
+  setCache(productId, data);
   return doc.shares;
 };
 
@@ -49,19 +61,35 @@ export const addReviewToProduct = async (productId, review) => {
     doc = await Engagement.create({
       productId,
       reviews: [review],
-      comments: 1,
       rating: review.stars || 0
     });
   } else {
     doc.reviews.push(review);
-    doc.comments = doc.reviews.length;
     const avg =
       doc.reviews.reduce((a, r) => a + (r.stars || 0), 0) / doc.reviews.length;
     doc.rating = Number(avg.toFixed(2));
     await doc.save();
   }
-  setCache(productId, doc.toObject());
+  const data = await getEngagement(productId);
+  data.reviews = doc.reviews;
+  data.rating = doc.rating;
+  setCache(productId, data);
   return review;
+};
+
+export const addCommentToProduct = async (productId, comment) => {
+  comment.timestamp = new Date();
+  let doc = await Engagement.findOne({ productId });
+  if (!doc) {
+    doc = await Engagement.create({ productId, comments: [comment] });
+  } else {
+    doc.comments.push(comment);
+    await doc.save();
+  }
+  const data = await getEngagement(productId);
+  data.comments = doc.comments.length;
+  setCache(productId, data);
+  return comment;
 };
 
 export const clearEngagementCache = () => engagements.clear();
@@ -115,7 +143,7 @@ export const populateDummyEngagements = async () => {
       productId: item.id,
       likes: item.likes,
       shares: item.shares,
-      comments: reviews.length,
+      comments: [],
       rating,
       reviews
     });
