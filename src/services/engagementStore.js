@@ -18,11 +18,15 @@ export const getEngagement = async productId => {
     doc = await Engagement.create({ productId });
   }
   const data = doc.toObject();
+  const totalComments =
+    (data.reviews ? data.reviews.length : 0) +
+    (data.comments ? data.comments.length : 0);
+
   const result = {
     productId: data.productId,
     likes: data.likes || 0,
     shares: data.shares || 0,
-    comments: data.comments ? data.comments.length : 0,
+    comments: totalComments,
     reviews: data.reviews || [],
     rating: data.rating || 0
   };
