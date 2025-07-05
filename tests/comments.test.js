@@ -26,18 +26,18 @@ beforeEach(async () => {
 });
 
 test('post and fetch comments', async () => {
+  const entityId = new mongoose.Types.ObjectId().toString();
   const payload = {
-    productId: 'p1',
     userId: 'u1',
-    comment: 'Nice card',
-    rating: 5,
-    timestamp: new Date().toISOString()
+    entityId,
+    entityType: 'credit-cards',
+    commentText: 'Nice card'
   };
   const res = await request(app).post('/api/comments').send(payload);
   expect(res.status).toBe(201);
-  expect(res.body.comment).toBe('Nice card');
+  expect(res.body.commentText).toBe('Nice card');
 
-  const list = await request(app).get('/api/comments?productId=p1');
+  const list = await request(app).get(`/api/comments?entityId=${entityId}`);
   expect(list.status).toBe(200);
   expect(list.body.length).toBe(1);
 });

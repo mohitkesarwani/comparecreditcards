@@ -1,24 +1,37 @@
 import express from 'express';
 import Joi from 'joi';
+import mongoose from 'mongoose';
 import Comment from '../models/Comment.js';
 
 const router = express.Router();
 
 const schema = Joi.object({
-  productId: Joi.string().required(),
-  userId: Joi.string().required(),
-  comment: Joi.string().min(1).max(300).required(),
-  rating: Joi.number().min(1).max(5).required(),
-  timestamp: Joi.string().isoDate().required()
+  userId: Joi.string().trim().required(),
+  entityId: Joi.string().required(),
+  entityType: Joi.string().valid('credit-cards', 'home-loans').required(),
+  commentText: Joi.string().min(1).required()
 });
 
 router.post('/', async (req, res) => {
   const { error, value } = schema.validate(req.body, { abortEarly: false });
   if (error) {
+    console.error('Validation error:', error.details.map(d => d.message).join(', '));
     return res.status(400).json({ message: 'Invalid comment' });
   }
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(value.entityId)) {
+    console.error('Invalid entityId:', value.entityId);
+    return res.status(400).json({ message: 'Invalid comment' });
+  }
+
   try {
-    const comment = await Comment.create(value);
+    const comment = await Comment.create({
+      userId: value.userId,
+      entityId: value.entityId,
+      entityType: value.entityType,
+      commentText: value.commentText
+    });
     res.status(201).json(comment);
   } catch (err) {
     console.error(err);
@@ -27,13 +40,13 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-  const { productId } = req.query;
-  if (!productId) {
-    return res.status(400).json({ message: 'productId query param required' });
+  const { entityId } = req.query;
+  if (!entityId) {
+    return res.status(400).json({ message: 'entityId query param required' });
   }
   try {
-    const comments = await Comment.find({ productId })
-      .sort({ timestamp: -1 })
+    const comments = await Comment.find({ entityId })
+      .sort({ createdAt: -1 })
       .lean();
     res.json(comments);
   } catch (err) {
