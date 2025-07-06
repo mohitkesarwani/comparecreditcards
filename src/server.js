@@ -3,6 +3,7 @@ import cors from 'cors';
 import axios from 'axios';
 import creditCardsRouter from './routes/creditCards.js';
 import residentialMortgagesRouter from './routes/residentialMortgages.js';
+import depositsRouter from './routes/deposits.js';
 import interactionsRouter from './routes/interactions.js';
 import engagementRoutes from './routes/engagementRoutes.js';
 import shareRoutes from './routes/shareRoutes.js';
@@ -29,6 +30,7 @@ export const startServer = async () => {
 
   app.use('/api/residential-mortgages', residentialMortgagesRouter);
   app.use('/api/credit-cards', creditCardsRouter);
+  app.use('/api/deposits', depositsRouter);
   app.use('/api/interactions', interactionsRouter);
   app.use('/api/products', engagementRoutes);
   app.use('/api', shareRoutes);

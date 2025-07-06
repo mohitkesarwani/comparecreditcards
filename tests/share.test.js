@@ -8,12 +8,15 @@ import { mockAuth } from '../src/middleware/auth.js';
 let mongod;
 let app;
 let shareRoutes;
+let Deposit;
 
 beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   const uri = mongod.getUri();
   process.env.MONGO_MORTGAGE_URI = uri;
+  process.env.MONGO_DEPOSIT_URI = uri;
   await mongoose.connect(uri);
+  Deposit = (await import('../src/models/Deposit.js')).default;
   shareRoutes = (await import('../src/routes/shareRoutes.js')).default;
   app = express();
   app.use(express.json());
@@ -23,6 +26,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await mongoose.connection.close();
+  if (Deposit?.db) {
+    await Deposit.db.close();
+  }
   await mongod.stop();
 });
 
@@ -67,4 +73,18 @@ test('get shared posts', async () => {
   expect(res.status).toBe(200);
   expect(res.body.length).toBe(1);
   expect(res.body[0].entity.productId).toBe('c3');
+});
+
+test('share deposit', async () => {
+  const dep = await Deposit.create({ productId: 'd1' });
+  const res = await request(app)
+    .post('/api/share')
+    .set({ 'x-user-id': 'u2' })
+    .send({
+      sharedEntityId: dep._id.toString(),
+      sharedEntityType: 'deposit'
+    });
+  expect(res.status).toBe(201);
+  const updated = await Deposit.findById(dep._id);
+  expect(updated.shareCount).toBe(1);
 });
