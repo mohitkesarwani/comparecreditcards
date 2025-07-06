@@ -87,6 +87,16 @@ export const addCommentToProduct = async (productId, comment) => {
   if (!doc) {
     doc = await Engagement.create({ productId, comments: [comment] });
   } else {
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const duplicate = doc.comments.find(
+      c =>
+        c.userId === comment.userId &&
+        c.comment === comment.comment &&
+        c.timestamp > oneMinuteAgo
+    );
+    if (duplicate) {
+      return null;
+    }
     doc.comments.push(comment);
     await doc.save();
   }

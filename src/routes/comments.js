@@ -26,6 +26,9 @@ router.post('/', async (req, res) => {
       userId: value.userId,
       comment: value.commentText
     });
+    if (!comment) {
+      return res.status(409).json({ message: 'Duplicate comment' });
+    }
     res.status(201).json({
       userId: value.userId,
       entityId: value.entityId,

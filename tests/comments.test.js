@@ -41,3 +41,19 @@ test('post and fetch comments', async () => {
   expect(list.status).toBe(200);
   expect(list.body.length).toBe(1);
 });
+
+test('prevent duplicate comment within a minute', async () => {
+  const entityId = new mongoose.Types.ObjectId().toString();
+  const payload = {
+    userId: 'u1',
+    entityId,
+    entityType: 'credit-cards',
+    commentText: 'Nice card'
+  };
+  const first = await request(app).post('/api/comments').send(payload);
+  expect(first.status).toBe(201);
+  const second = await request(app).post('/api/comments').send(payload);
+  expect(second.status).toBe(409);
+  const list = await request(app).get(`/api/comments?entityId=${entityId}`);
+  expect(list.body.length).toBe(1);
+});
