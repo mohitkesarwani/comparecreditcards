@@ -79,6 +79,8 @@ export const fetchDepositsData = async () => {
   console.log('Clearing existing deposit data');
   await Deposit.deleteMany({});
 
+  const report = [];
+
   for (const bank of banks) {
     console.log(`Fetching products for ${bank.name}`);
     try {
@@ -176,10 +178,31 @@ export const fetchDepositsData = async () => {
           console.log(`Saved ${record.productId} from ${bank.name}`);
         } catch (err) {
           logApiError(`Failed to process product ${item.productId} from ${bank.name}`, err);
+          report.push({
+            bank: bank.name,
+            productId: item.productId,
+            stage: 'detail',
+            reason: err.message
+          });
         }
       }
     } catch (err) {
       logApiError(`Failed to fetch product list from ${bank.name}`, err);
+      report.push({
+        bank: bank.name,
+        stage: 'list',
+        reason: err.message
+      });
     }
+  }
+
+  if (report.length > 0) {
+    console.log('Report');
+    report.forEach(r => {
+      const idInfo = r.productId ? ` (${r.productId})` : '';
+      console.log(`- ${r.bank}${idInfo} - ${r.stage} failed: ${r.reason}`);
+    });
+  } else {
+    console.log('Report: no issues detected');
   }
 };
