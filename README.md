@@ -73,25 +73,25 @@ GET /api/residential-mortgages/:id
 Returns a single residential mortgage by its MongoDB `_id` or `productId`.
 
 ```
-GET /api/interactions/:productId?type=creditCard|homeLoan|deposit
+GET /api/interactions/:productId?type=creditCard|home-loans|deposit
 ```
 
 Returns interaction data (likes, recent comments and share count) for the specified product.
 
 ```
-POST /api/interactions/:productId/like?type=creditCard|homeLoan|deposit
+POST /api/interactions/:productId/like?type=creditCard|home-loans|deposit
 ```
 
 Toggles like/unlike for the authenticated user and returns the updated like count.
 
 ```
-POST /api/interactions/:productId/comment?type=creditCard|homeLoan|deposit
+POST /api/interactions/:productId/comment?type=creditCard|home-loans|deposit
 ```
 
 Adds a comment for the authenticated user. Accepts `{ text: "comment" }` in the request body.
 
 ```
-POST /api/interactions/:productId/share?type=creditCard|homeLoan|deposit
+POST /api/interactions/:productId/share?type=creditCard|home-loans|deposit
 ```
 
 Increments and returns the product share count.

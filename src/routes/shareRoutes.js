@@ -8,7 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 const router = express.Router();
 
 const sanitize = text => text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const validType = t => ['creditCard', 'homeLoan', 'deposit'].includes(t);
+const validType = t => ['creditCard', 'home-loans', 'deposit'].includes(t);
 
 router.post('/share', requireAuth, async (req, res) => {
   const { sharedEntityId, sharedEntityType, commentText } = req.body;
@@ -22,7 +22,7 @@ router.post('/share', requireAuth, async (req, res) => {
   const Model =
     sharedEntityType === 'creditCard'
       ? CreditCard
-      : sharedEntityType === 'homeLoan'
+      : sharedEntityType === 'home-loans'
         ? ResidentialMortgage
         : Deposit;
   const entity = await Model.findById(sharedEntityId);
@@ -47,7 +47,7 @@ router.get('/shared-posts/:userId', async (req, res) => {
     const Model =
       p.sharedEntityType === 'creditCard'
         ? CreditCard
-        : p.sharedEntityType === 'homeLoan'
+        : p.sharedEntityType === 'home-loans'
           ? ResidentialMortgage
           : Deposit;
     const entity = await Model.findById(p.sharedEntityId).lean();
@@ -64,7 +64,7 @@ router.get('/share-count/:entityType/:entityId', async (req, res) => {
   const Model =
     entityType === 'creditCard'
       ? CreditCard
-      : entityType === 'homeLoan'
+      : entityType === 'home-loans'
         ? ResidentialMortgage
         : Deposit;
   const entity = await Model.findById(entityId);
