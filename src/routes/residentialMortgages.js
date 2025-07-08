@@ -1,22 +1,40 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import ResidentialMortgage from '../models/ResidentialMortgage.js';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    let { page = 1, limit = 20 } = req.query;
-    page = parseInt(page, 10);
+    let { cursor, limit = 20 } = req.query;
     limit = parseInt(limit, 10);
-    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
-      return res.status(400).json({ message: 'Invalid pagination parameters' });
+
+    if (isNaN(limit) || limit < 1) {
+      return res.status(400).json({ message: 'Invalid limit parameter' });
     }
-    const skip = (page - 1) * limit;
-    const [total, data] = await Promise.all([
-      ResidentialMortgage.countDocuments({}),
-      ResidentialMortgage.find({}).skip(skip).limit(limit)
-    ]);
-    res.json({ total, page, limit, data });
+
+    // Enforce maximum page size
+    const maxLimit = 50;
+    if (limit > maxLimit) limit = maxLimit;
+
+    const query = {};
+    if (cursor) {
+      if (!mongoose.Types.ObjectId.isValid(cursor)) {
+        return res.status(400).json({ message: 'Invalid cursor parameter' });
+      }
+      query._id = { $gt: new mongoose.Types.ObjectId(cursor) };
+    }
+
+    // Fetch one extra to determine if there are more results
+    const records = await ResidentialMortgage.find(query)
+      .sort({ _id: 1 })
+      .limit(limit + 1);
+
+    const hasMore = records.length > limit;
+    const data = hasMore ? records.slice(0, limit) : records;
+    const nextCursor = hasMore ? data[data.length - 1]._id.toString() : null;
+
+    res.json({ data, nextCursor, hasMore });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
