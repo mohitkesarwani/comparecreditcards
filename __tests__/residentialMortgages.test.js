@@ -71,3 +71,29 @@ test('limit is capped at 50', async () => {
   expect(res.status).toBe(200);
   expect(res.body.data.length).toBeLessThanOrEqual(50);
 });
+
+test('interest rate filter works', async () => {
+  const docs = [
+    { productId: 'm1', lendingRates: [{ rate: 5 }] },
+    { productId: 'm2', lendingRates: [{ rate: 7 }] },
+    { productId: 'm3', lendingRates: [{ rate: 10 }] }
+  ];
+  await Mortgage.insertMany(docs);
+
+  const res = await request(app).get('/api/residential-mortgages?minInterestRate=6&maxInterestRate=8');
+  expect(res.status).toBe(200);
+  expect(toIds(res.body.data)).toEqual(['m2']);
+});
+
+test('invalid interest rate filter is ignored', async () => {
+  const docs = [
+    { productId: 'm1', lendingRates: [{ rate: 5 }] },
+    { productId: 'm2', lendingRates: [{ rate: 7 }] }
+  ];
+  await Mortgage.insertMany(docs);
+
+  const res = await request(app).get('/api/residential-mortgages?minInterestRate=0&maxInterestRate=0');
+  expect(res.status).toBe(200);
+  expect(res.body.data).toHaveLength(2);
+});
+

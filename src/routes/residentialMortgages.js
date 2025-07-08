@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    let { cursor, limit = 20 } = req.query;
+    let { cursor, limit = 20, minInterestRate, maxInterestRate } = req.query;
     limit = parseInt(limit, 10);
 
     if (isNaN(limit) || limit < 1) {
@@ -18,6 +18,29 @@ router.get('/', async (req, res) => {
     if (limit > maxLimit) limit = maxLimit;
 
     const query = {};
+
+    // Handle interest rate filters
+    let minRate = parseFloat(minInterestRate);
+    let maxRate = parseFloat(maxInterestRate);
+    if (isNaN(minRate)) minRate = null;
+    if (isNaN(maxRate)) maxRate = null;
+
+    if ((minRate === 0 || minRate === null) && (maxRate === 0 || maxRate === null)) {
+      minRate = null;
+      maxRate = null;
+    }
+
+    if (minRate !== null && maxRate !== null && maxRate < minRate) {
+      minRate = null;
+      maxRate = null;
+    }
+
+    if (minRate !== null || maxRate !== null) {
+      const rateFilter = {};
+      if (minRate !== null) rateFilter.$gte = minRate;
+      if (maxRate !== null) rateFilter.$lte = maxRate;
+      query['lendingRates.rate'] = rateFilter;
+    }
     if (cursor) {
       if (!mongoose.Types.ObjectId.isValid(cursor)) {
         return res.status(400).json({ message: 'Invalid cursor parameter' });
