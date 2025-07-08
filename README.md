@@ -64,7 +64,18 @@ Returns a single deposit product by its MongoDB `_id` or `productId`.
 GET /api/residential-mortgages
 ```
 
-Returns all residential mortgage documents stored in MongoDB as JSON.
+Returns a paginated list of residential mortgage documents. Use
+`?cursor=<lastId>&limit=<n>` to paginate. The response format is:
+
+```json
+{
+  "data": [...],
+  "nextCursor": "<id>" | null,
+  "hasMore": true
+}
+```
+
+`limit` defaults to 20 and cannot exceed 50.
 
 ```
 GET /api/residential-mortgages/:id
