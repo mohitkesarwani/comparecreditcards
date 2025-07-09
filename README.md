@@ -84,25 +84,25 @@ GET /api/residential-mortgages/:id
 Returns a single residential mortgage by its MongoDB `_id` or `productId`.
 
 ```
-GET /api/interactions/:productId?type=creditCard|home-loans|deposit
+GET /api/interactions/:productId?type=creditCard|residential-mortgages|deposit
 ```
 
 Returns interaction data (likes, recent comments and share count) for the specified product.
 
 ```
-POST /api/interactions/:productId/like?type=creditCard|home-loans|deposit
+POST /api/interactions/:productId/like?type=creditCard|residential-mortgages|deposit
 ```
 
 Toggles like/unlike for the authenticated user and returns the updated like count.
 
 ```
-POST /api/interactions/:productId/comment?type=creditCard|home-loans|deposit
+POST /api/interactions/:productId/comment?type=creditCard|residential-mortgages|deposit
 ```
 
 Adds a comment for the authenticated user. Accepts `{ text: "comment" }` in the request body.
 
 ```
-POST /api/interactions/:productId/share?type=creditCard|home-loans|deposit
+POST /api/interactions/:productId/share?type=creditCard|residential-mortgages|deposit
 ```
 
 Increments and returns the product share count.
@@ -149,7 +149,7 @@ POST /api/comments
 ```
 
 Creates a new comment document. The body must include `userId`, `entityId`,
-`entityType` (`"credit-cards"`, `"home-loans"` or `"deposit"`) and `commentText`.
+`entityType` (`"credit-cards"`, `"residential-mortgages"` or `"deposit"`) and `commentText`.
 
 ```
 GET /api/comments?entityId=xxxxx

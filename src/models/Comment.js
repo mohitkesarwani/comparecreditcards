@@ -7,7 +7,7 @@ const CommentSchema = new mongoose.Schema({
   entityId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
   entityType: {
     type: String,
-    enum: ['credit-cards', 'home-loans'],
+    enum: ['credit-cards', 'residential-mortgages'],
     required: true,
     index: true
   },
