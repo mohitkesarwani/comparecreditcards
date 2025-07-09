@@ -14,7 +14,6 @@ This service fetches credit card and residential mortgage product details from A
    ```
    - `MONGO_URI` – MongoDB connection string for credit card data
   - `MONGO_MORTGAGE_URI` – MongoDB connection string for residential mortgage data
-  - `MONGO_DEPOSIT_URI` – MongoDB connection string for deposit product data
   - `CRON_SCHEDULE` – number of hours between fetches. Accepts values from `0.1` up to `24`; for example `1` runs hourly and `0.5` runs every 30 minutes.
   - `GET_PRODUCTS_HEADERS` – JSON object of headers for the product list request
   - `GET_PRODUCT_DETAIL_HEADERS` – JSON object of headers for the product detail request
@@ -49,33 +48,10 @@ GET /api/credit-cards/:id
 Returns a single credit card by its MongoDB `_id` or `productId`.
 
 ```
-GET /api/deposits
-```
-
-Returns all deposit product documents stored in MongoDB as JSON.
-
-```
-GET /api/deposits/:id
-```
-
-Returns a single deposit product by its MongoDB `_id` or `productId`.
-
-```
 GET /api/residential-mortgages
 ```
 
-Returns a paginated list of residential mortgage documents. Use
-`?cursor=<lastId>&limit=<n>` to paginate. The response format is:
-
-```json
-{
-  "data": [...],
-  "nextCursor": "<id>" | null,
-  "hasMore": true
-}
-```
-
-`limit` defaults to 20 and cannot exceed 50.
+Returns all residential mortgage documents stored in MongoDB as JSON.
 
 ```
 GET /api/residential-mortgages/:id
@@ -84,25 +60,25 @@ GET /api/residential-mortgages/:id
 Returns a single residential mortgage by its MongoDB `_id` or `productId`.
 
 ```
-GET /api/interactions/:productId?type=creditCard|residential-mortgages|deposit
+GET /api/interactions/:productId?type=creditCard|homeLoan
 ```
 
 Returns interaction data (likes, recent comments and share count) for the specified product.
 
 ```
-POST /api/interactions/:productId/like?type=creditCard|residential-mortgages|deposit
+POST /api/interactions/:productId/like?type=creditCard|homeLoan
 ```
 
 Toggles like/unlike for the authenticated user and returns the updated like count.
 
 ```
-POST /api/interactions/:productId/comment?type=creditCard|residential-mortgages|deposit
+POST /api/interactions/:productId/comment?type=creditCard|homeLoan
 ```
 
 Adds a comment for the authenticated user. Accepts `{ text: "comment" }` in the request body.
 
 ```
-POST /api/interactions/:productId/share?type=creditCard|residential-mortgages|deposit
+POST /api/interactions/:productId/share?type=creditCard|homeLoan
 ```
 
 Increments and returns the product share count.
@@ -149,7 +125,7 @@ POST /api/comments
 ```
 
 Creates a new comment document. The body must include `userId`, `entityId`,
-`entityType` (`"credit-cards"`, `"residential-mortgages"` or `"deposit"`) and `commentText`.
+`entityType` (`"credit-cards"` or `"home-loans"`) and `commentText`.
 
 ```
 GET /api/comments?entityId=xxxxx
