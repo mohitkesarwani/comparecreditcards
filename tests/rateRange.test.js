@@ -38,3 +38,27 @@ test('returns rate range', async () => {
   expect(res.body.minRate).toBeCloseTo(5.5);
   expect(res.body.maxRate).toBeCloseTo(7.2);
 });
+
+test('handles string and numeric rates', async () => {
+  const docs = [
+    { productId: 'm1', lendingRates: [{ rate: '0.0575' }, { rate: 0.1 }] },
+    { productId: 'm2', lendingRates: [{ rate: '0.1599' }, { rate: null }] },
+    { productId: 'm3', lendingRates: [] }
+  ];
+  await Mortgage.insertMany(docs);
+  const res = await request(app).get('/api/residential-mortgages/rate-range');
+  expect(res.status).toBe(200);
+  expect(res.body.minRate).toBeCloseTo(0.0575);
+  expect(res.body.maxRate).toBeCloseTo(0.1599);
+});
+
+test('uses fallback when no valid rates found', async () => {
+  await Mortgage.insertMany([
+    { productId: 'm1', lendingRates: [{ rate: null }] },
+    { productId: 'm2', lendingRates: [{ rate: 'abc' }] }
+  ]);
+  const res = await request(app).get('/api/residential-mortgages/rate-range');
+  expect(res.status).toBe(200);
+  expect(res.body.minRate).toBeCloseTo(0.05);
+  expect(res.body.maxRate).toBeCloseTo(0.15);
+});

@@ -66,21 +66,30 @@ router.get('/', async (req, res) => {
 
 router.get('/rate-range', async (req, res) => {
   try {
-    const [stats] = await ResidentialMortgage.aggregate([
-      { $unwind: '$lendingRates' },
-      { $match: { 'lendingRates.rate': { $type: 'number' } } },
-      {
-        $group: {
-          _id: null,
-          minRate: { $min: '$lendingRates.rate' },
-          maxRate: { $max: '$lendingRates.rate' }
+    // Only select the lendingRates.rate fields to minimise data transfer
+    const mortgages = await ResidentialMortgage.find({}, 'lendingRates.rate').lean();
+
+    const rates = [];
+    for (const mortgage of mortgages) {
+      if (Array.isArray(mortgage.lendingRates)) {
+        for (const lr of mortgage.lendingRates) {
+          const rate = parseFloat(lr.rate);
+          if (!isNaN(rate)) {
+            rates.push(rate);
+          }
         }
       }
-    ]);
-    res.json({
-      minRate: stats ? stats.minRate : null,
-      maxRate: stats ? stats.maxRate : null
-    });
+    }
+
+    let minRate = 0.05;
+    let maxRate = 0.15;
+
+    if (rates.length > 0) {
+      minRate = Math.min(...rates);
+      maxRate = Math.max(...rates);
+    }
+
+    res.json({ minRate, maxRate });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
