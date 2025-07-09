@@ -15,7 +15,7 @@ const commentSchema = new mongoose.Schema({
 
 const InteractionSchema = new mongoose.Schema({
   productId: String,
-  type: { type: String, enum: ['creditCard', 'residential-mortgages', 'deposit'] },
+  type: { type: String, enum: ['creditCard', 'homeLoan'] },
   likes: [likeSchema],
   comments: [commentSchema],
   shareCount: { type: Number, default: 0 }

@@ -8,7 +8,7 @@ const schema = Joi.object({
   userId: Joi.string().required(),
   entityId: Joi.string().required(),
   entityType: Joi.string()
-    .valid('credit-cards', 'residential-mortgages', 'deposit')
+    .valid('credit-cards', 'home-loans', 'deposit')
     .required(),
   rating: Joi.number().min(0).max(5).required(),
   commentText: Joi.string().min(1).required()

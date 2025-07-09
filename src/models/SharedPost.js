@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const SharedPostSchema = new mongoose.Schema({
   userId: String,
   sharedEntityId: mongoose.Schema.Types.ObjectId,
-  sharedEntityType: { type: String, enum: ['creditCard', 'residential-mortgages', 'deposit'] },
+  sharedEntityType: { type: String, enum: ['creditCard', 'homeLoan'] },
   commentText: String,
   createdAt: { type: Date, default: Date.now }
 });

@@ -9,7 +9,7 @@ const schema = Joi.object({
   userId: Joi.string().trim().required(),
   entityId: Joi.string().required(),
   entityType: Joi.string()
-    .valid('credit-cards', 'residential-mortgages', 'deposit')
+    .valid('credit-cards', 'home-loans', 'deposit')
     .required(),
   commentText: Joi.string().min(1).required()
 });
