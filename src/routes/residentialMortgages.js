@@ -64,6 +64,29 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/rate-range', async (req, res) => {
+  try {
+    const [stats] = await ResidentialMortgage.aggregate([
+      { $unwind: '$lendingRates' },
+      { $match: { 'lendingRates.rate': { $type: 'number' } } },
+      {
+        $group: {
+          _id: null,
+          minRate: { $min: '$lendingRates.rate' },
+          maxRate: { $max: '$lendingRates.rate' }
+        }
+      }
+    ]);
+    res.json({
+      minRate: stats ? stats.minRate : null,
+      maxRate: stats ? stats.maxRate : null
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 router.get('/:id', async (req, res) => {
   try {
