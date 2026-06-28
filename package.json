@@ -1,34 +1,22 @@
 {
   "name": "comparecreditcards",
-  "version": "1.0.0",
-  "description": "Service to fetch and store Australian bank credit card data",
-  "main": "src/index.js",
+  "version": "2.0.0",
+  "description": "One-shot CDR-to-Supabase credit-card ingest for the creditcardsUI app",
+  "main": "src/ingest.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "ingest": "node --env-file=.env src/ingest.js",
+    "ingest:dry": "INGEST_DRY_RUN=1 node --env-file=.env src/ingest.js",
+    "ingest:reextract": "INGEST_REEXTRACT_ONLY=1 node --env-file=.env src/ingest.js",
+    "ingest:loans": "node --env-file=.env src/ingestHomeLoans.js",
+    "ingest:loans:dry": "INGEST_DRY_RUN=1 node --env-file=.env src/ingestHomeLoans.js",
+    "test": "node --test \"test/**/*.test.js\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
-    "axios": "^1.6.7",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.19.2",
-    "mongoose": "^8.3.5",
-    "node-cron": "^3.0.3",
-    "uuid": "^9.0.1",
-    "joi": "^17.12.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.3",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "mongodb-memory-server": "^8.12.1"
+    "@supabase/supabase-js": "^2.45.0",
+    "axios": "^1.6.7"
   }
 }

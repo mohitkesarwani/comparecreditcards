@@ -1,148 +1,81 @@
-# Credit Card and Residential Mortgage Data Service
+# comparecreditcards · CDR → Supabase ingest
 
-This service fetches credit card and residential mortgage product details from Australian bank Consumer Data Standards APIs and stores them in MongoDB. Data is refreshed on a schedule using `node-cron`.
+A small Node CLI that fetches Australian Consumer Data Right (CDR) credit-card
+products from each bank's public Open Banking API and upserts them into the
+`credit_cards` table consumed by the [creditcardsUI](../creditcardsUI) frontend.
+
+This is the only thing in this repo: a one-shot ingest. There is no Express
+server, no cron, no Mongo. The UI talks to Supabase directly.
 
 ## Setup
 
-1. Install dependencies (Node.js 18+ recommended):
-   ```bash
-   npm install
-   ```
-2. Copy `.env.example` to `.env` and update the values if necessary:
-   ```bash
-   cp .env.example .env
-   ```
-   - `MONGO_URI` – MongoDB connection string for credit card data
-  - `MONGO_MORTGAGE_URI` – MongoDB connection string for residential mortgage data
-  - `CRON_SCHEDULE` – number of hours between fetches. Accepts values from `0.1` up to `24`; for example `1` runs hourly and `0.5` runs every 30 minutes.
-  - `GET_PRODUCTS_HEADERS` – JSON object of headers for the product list request
-  - `GET_PRODUCT_DETAIL_HEADERS` – JSON object of headers for the product detail request
-  - `DEFAULT_X_V` – default `x-v` header value if not supplied in the JSON header variables
-  - `X_V_RETRY_FROM` – `x-v` value that triggers a retry when a request fails
-  - `X_V_RETRY_TO` – `x-v` version used for that retry
-    (requests failing with `X_V_RETRY_FROM` will automatically retry with `X_V_RETRY_TO`)
-  - `PORT` – port for the HTTP API server (default `3000`)
-
-3. Start the service
-   ```bash
-   npm start
-   ```
-   During development you can use `npm run dev` to restart automatically.
-
-The service connects to MongoDB, then periodically fetches credit card products from the banks defined in `src/constants/banks.js`. Only products with a `productCategory` of `CRED_AND_CHRG_CARDS` are processed. Each card is stored or updated in the `CreditCard` collection based on `bankName` and `productId`. On each run the service removes any existing card records so the database always contains only the most recent data returned by the APIs.
-
-## API
-
-After starting the service, an HTTP server exposes the following endpoints:
-
-```
-GET /api/credit-cards
+```bash
+npm install
+cp .env.example .env       # then fill in SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+npm run ingest             # writes to Supabase
 ```
 
-Returns all credit card documents stored in MongoDB as JSON.
+Requires Node 20+ (uses `--env-file`).
 
-```
-GET /api/credit-cards/:id
-```
+### Where to find the keys
 
-Returns a single credit card by its MongoDB `_id` or `productId`.
+In the Supabase dashboard → **Project Settings → API**:
 
-```
-GET /api/residential-mortgages
-```
+| Field | Use |
+| ----- | --- |
+| Project URL | `SUPABASE_URL` |
+| `service_role` secret | `SUPABASE_SERVICE_ROLE_KEY` — bypasses RLS so the ingest can write. **Never** ship this in the frontend bundle. |
 
-Returns all residential mortgage documents stored in MongoDB as JSON.
-
-```
-GET /api/residential-mortgages/:id
-```
-
-Returns a single residential mortgage by its MongoDB `_id` or `productId`.
-
-```
-GET /api/interactions/:productId?type=creditCard|homeLoan
-```
-
-Returns interaction data (likes, recent comments and share count) for the specified product.
-
-```
-POST /api/interactions/:productId/like?type=creditCard|homeLoan
-```
-
-Toggles like/unlike for the authenticated user and returns the updated like count.
-
-```
-POST /api/interactions/:productId/comment?type=creditCard|homeLoan
-```
-
-Adds a comment for the authenticated user. Accepts `{ text: "comment" }` in the request body.
-
-```
-POST /api/interactions/:productId/share?type=creditCard|homeLoan
-```
-
-Increments and returns the product share count.
-
-### Engagement
-
-These endpoints track likes, shares and reviews for any product ID.
-
-```
-GET /api/products/:id/engagement
-```
-
-Returns the engagement stats for the specified product.
-
-```
-POST /api/products/:id/like
-```
-
-Increments and returns the product like count. Limited to one request per IP.
-
-```
-POST /api/products/:id/share
-```
-
-Increments and returns the share count.
-
-```
-POST /api/products/:id/review
-```
-
-Adds a review with `{ name, comment, stars }` and updates the average rating.
-
-```
-POST /api/reviews
-```
-
-Creates a review using `{ userId, entityId, entityType, rating, commentText }`.
-This route is an alias for `POST /api/products/:id/review` where `id` is the
-`entityId` value. The average rating and comment count are updated
-accordingly.
-
-```
-POST /api/comments
-```
-
-Creates a new comment document. The body must include `userId`, `entityId`,
-`entityType` (`"credit-cards"` or `"home-loans"`) and `commentText`.
-
-```
-GET /api/comments?entityId=xxxxx
-```
-
-Returns all comments for the specified entity, sorted by most recent.
-
-The server listens on the port defined by the `PORT` environment variable (default `3000`).
-
-## Python Example
-
-An example Python script is available in the `examples` directory. It demonstrates how to call the Consumer Data Standards APIs using the `requests` library.
-
-Run the script with Python 3:
+## Useful run modes
 
 ```bash
-python examples/get_products.py
+# Fetch only — don't touch Supabase
+npm run ingest:dry
+
+# Only one or two banks (matches src/constants/banks.js name exactly)
+INGEST_BANKS="ANZ,CommBank" npm run ingest
+
+# Cap products per bank — quick smoke test
+INGEST_LIMIT_PER_BANK=2 INGEST_BANKS="ANZ" npm run ingest
 ```
 
-The script fetches the product list from ANZ and then retrieves details for the first product returned.
+## How it works
+
+For each bank in `src/constants/banks.js`:
+
+1. `GET {baseUrl}/banking/products` — paginated product list.
+2. Filter to credit cards (`productCategory ∈ {CRED_AND_CHRG_CARDS, CREDIT_CARD}`).
+3. For each card: `GET {baseUrl}/banking/products/{id}` for full detail.
+4. Shape into the Supabase `credit_cards` schema (`src/lib/buildCardRecord.js`) — most
+   of the CDR nesting lands in JSONB columns (`fees_and_pricing`, `lending_rates`,
+   `fees`, `features`, `eligibility`, `card_art`); fields without a column home
+   land in `raw`.
+5. Upsert on `product_id`.
+
+CDR APIs are inconsistent — some banks 404, some are slow, some return the
+wrong `x-v` version. The script logs each failure and continues; `x-v` version
+mismatches automatically retry once with the version configured in
+`X_V_RETRY_TO`.
+
+## Project structure
+
+```
+src/
+├── constants/banks.js     ~100 CDR base URLs (one per bank)
+├── lib/
+│   ├── supabase.js        service-role client
+│   ├── fetchCdr.js        list + detail fetchers, x-v retry
+│   └── buildCardRecord.js raw product → Supabase row
+└── ingest.js              CLI entry point
+
+examples/get_products.py   small Python demo of the CDR API
+```
+
+## What's not here (yet)
+
+- Residential mortgages ingest — the old repo had a parallel cron job for
+  `RESIDENTIAL_MORTGAGES`. Easy to add: copy `ingest.js`, change the category
+  filter and target table.
+- Scheduled runs — invoke `npm run ingest` from cron / GitHub Actions / Supabase
+  Edge Functions / etc. The CLI is intentionally idempotent (upsert on
+  `product_id`).
